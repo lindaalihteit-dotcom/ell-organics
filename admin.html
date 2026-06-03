@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ell Organics — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--hot:#ff4d79;--deep:#8b1a3a;--cream:#fff5f8;--dark:#1e0f17;--muted:#9b6070;}
+body{font-family:'Jost',sans-serif;background:#f8f0f3;color:var(--dark);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{
+  position:fixed;inset:0;background:linear-gradient(135deg,var(--hot),var(--deep));
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.login-box{background:#fff;padding:52px 44px;width:100%;max-width:400px;text-align:center;}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--dark);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;}
+.login-logo em{color:var(--hot);font-style:italic;}
+.login-sub{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:32px;}
+.login-input{width:100%;padding:14px 16px;border:1px solid rgba(255,133,161,.3);font-size:14px;font-family:'Jost',sans-serif;outline:none;margin-bottom:14px;transition:border-color .2s;}
+.login-input:focus{border-color:var(--hot);}
+.login-btn{width:100%;background:var(--hot);color:#fff;border:none;padding:15px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;transition:background .2s;}
+.login-btn:hover{background:var(--deep);}
+.login-err{color:#e53935;font-size:12px;margin-top:10px;display:none;}
+
+/* MAIN */
+#mainApp{display:none;}
+
+/* HEADER */
+.admin-header{
+  background:linear-gradient(135deg,var(--hot),var(--deep));
+  padding:0 32px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.admin-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:#fff;letter-spacing:3px;text-transform:uppercase;}
+.admin-logo em{font-style:italic;}
+.admin-right{display:flex;align-items:center;gap:16px;}
+.save-all-btn{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);padding:9px 22px;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s;}
+.save-all-btn:hover{background:rgba(255,255,255,.3);}
+.logout-btn{background:none;color:rgba(255,255,255,.6);border:none;font-size:12px;cursor:pointer;font-family:'Jost',sans-serif;letter-spacing:1px;}
+
+/* LAYOUT */
+.admin-body{max-width:1100px;margin:0 auto;padding:32px 24px;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:#fff;padding:20px 24px;border-top:3px solid var(--hot);}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--dark);}
+.stat-l{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+
+/* SECTION HEADER */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,133,161,.2);}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--dark);}
+.sec-title em{font-style:italic;color:var(--hot);}
+.sec-count{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+
+/* CATEGORY TABS */
+.cat-tabs{display:flex;gap:0;margin-bottom:24px;background:#fff;border:1px solid rgba(255,133,161,.15);}
+.cat-tab{flex:1;padding:14px 8px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;transition:all .2s;border-bottom:2px solid transparent;text-align:center;}
+.cat-tab.on{color:var(--hot);border-bottom-color:var(--hot);background:var(--cream);}
+
+/* PRODUCT TABLE */
+.p-table{background:#fff;width:100%;border-collapse:collapse;margin-bottom:32px;}
+.p-table th{background:var(--cream);padding:12px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;border-bottom:1px solid rgba(255,133,161,.2);}
+.p-table td{padding:14px 16px;border-bottom:1px solid rgba(255,133,161,.08);vertical-align:middle;}
+.p-table tr:last-child td{border-bottom:none;}
+.p-table tr:hover td{background:#fff8fa;}
+
+.prod-img{width:48px;height:52px;object-fit:contain;background:var(--cream);padding:4px;}
+.prod-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--dark);font-weight:400;}
+.prod-variant{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Price input */
+.price-input{
+  width:80px;padding:8px 10px;
+  border:1px solid rgba(255,133,161,.3);
+  font-size:14px;font-family:'Cormorant Garamond',serif;
+  color:var(--dark);outline:none;transition:border-color .2s;
+  font-weight:400;
+}
+.price-input:focus{border-color:var(--hot);}
+
+/* Stock toggle */
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{position:relative;width:48px;height:26px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{
+  position:absolute;inset:0;
+  background:#ddd;border-radius:26px;
+  transition:background .25s;
+}
+.toggle-slider::before{
+  content:'';position:absolute;
+  width:20px;height:20px;border-radius:50%;
+  background:#fff;top:3px;left:3px;
+  transition:transform .25s;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle-slider{background:var(--hot);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(22px);}
+.toggle-label{font-size:11px;letter-spacing:1px;color:var(--muted);}
+.toggle-label.in{color:#2e7d32;}
+.toggle-label.out{color:#c62828;}
+
+/* Sold out badge on product name */
+.sold-out-tag{
+  display:inline-block;background:#ffebee;color:#c62828;
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:2px 8px;margin-left:8px;
+  font-family:'Jost',sans-serif;
+}
+
+/* SAVE button per row */
+.row-save{
+  background:var(--hot);color:#fff;border:none;
+  padding:7px 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;font-family:'Jost',sans-serif;transition:background .2s;
+}
+.row-save:hover{background:var(--deep);}
+.row-save.saved{background:#2e7d32;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--dark);color:#fff;padding:12px 28px;
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  z-index:9000;transition:transform .3s;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* WHISH SECTION */
+.whish-section{background:#fff;padding:28px;margin-bottom:32px;border-left:3px solid var(--hot);}
+.whish-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--dark);margin-bottom:16px;}
+.whish-status{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);}
+.whish-dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
+.whish-dot.active{background:#2e7d32;}
+
+@media(max-width:768px){
+  .stats{grid-template-columns:1fr 1fr;}
+  .admin-body{padding:20px 16px;}
+  .p-table th:nth-child(1),.p-table td:nth-child(1){display:none;}
+}
+
+/* ADD PRODUCT FORM */
+.add-form{background:#fff;padding:28px;margin-bottom:32px;border-top:3px solid var(--hot);}
+.add-form-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--dark);margin-bottom:20px;}
+.add-form-title em{font-style:italic;color:var(--hot);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;}
+.form-control{padding:12px 14px;border:1px solid rgba(255,133,161,.3);font-size:13px;font-family:'Jost',sans-serif;color:var(--dark);outline:none;transition:border-color .2s;background:#fff;}
+.form-control:focus{border-color:var(--hot);}
+select.form-control{cursor:pointer;}
+.img-upload-area{
+  border:2px dashed rgba(255,133,161,.4);padding:32px;text-align:center;
+  cursor:pointer;transition:all .2s;background:#fff8fa;
+  position:relative;
+}
+.img-upload-area:hover{border-color:var(--hot);background:var(--cream);}
+.img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.img-preview{width:100%;max-height:160px;object-fit:contain;display:none;margin-top:12px;}
+.upload-icon{font-size:32px;margin-bottom:8px;}
+.upload-txt{font-size:12px;color:var(--muted);letter-spacing:1px;}
+.add-product-btn{
+  background:var(--hot);color:#fff !important;border:none;
+  padding:16px 40px;font-size:11px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;
+  transition:all .2s;display:inline-flex;align-items:center;gap:10px;
+}
+.add-product-btn:hover{background:var(--deep);}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Ell <em>Organics</em></div>
+    <div class="login-sub">Admin Panel</div>
+    <input class="login-input" id="passInput" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Enter</button>
+    <div class="login-err" id="loginErr">Incorrect password</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <div class="admin-header">
+    <div class="admin-logo">Ell <em>Organics</em> — Admin</div>
+    <div class="admin-right">
+      <button class="save-all-btn" onclick="saveAll()">Save All Changes</button>
+      <button class="save-all-btn" onclick="exportStockData()" style="margin-right:8px;">Export Stock Data</button><button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-n" id="statTotal">0</div>
+        <div class="stat-l">Total Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" id="statInStock">0</div>
+        <div class="stat-l">In Stock</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" id="statSoldOut">0</div>
+        <div class="stat-l">Sold Out</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" id="statCats">4</div>
+        <div class="stat-l">Categories</div>
+      </div>
+    </div>
+
+    <!-- WhishMoney Status -->
+    <div class="whish-section">
+      <div class="whish-title">WhishMoney Payment</div>
+      <div class="whish-status">
+        <div class="whish-dot" id="whishDot"></div>
+        <span id="whishStatus">No WhishMoney link added yet. Send your merchant QR/link to add it.</span>
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="cat-tabs">
+      <button class="cat-tab on" onclick="showCat('intimate',this)">Intimate Care</button>
+      <button class="cat-tab" onclick="showCat('hair',this)">Hair Care</button>
+      <button class="cat-tab" onclick="showCat('body',this)">Body Care</button>
+      <button class="cat-tab" onclick="showCat('summer',this)">Summer</button>
+    </div>
+
+    <!-- Product Tables per category -->
+    <div id="cat-intimate"></div>
+    <div id="cat-hair" style="display:none"></div>
+    <div id="cat-body" style="display:none"></div>
+    <div id="cat-summer" style="display:none"></div>
+
+
+    <!-- ADD NEW PRODUCT -->
+    <div class="add-form">
+      <div class="add-form-title">Add <em>New Product</em></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input class="form-control" id="np-name" type="text" placeholder="e.g. Rose Body Oil">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Variant / Scent</label>
+          <input class="form-control" id="np-variant" type="text" placeholder="e.g. Rose (optional)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price ($) *</label>
+          <input class="form-control" id="np-price" type="number" step="0.5" min="0" placeholder="e.g. 9">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-control" id="np-cat">
+            <option value="intimate">Intimate Care</option>
+            <option value="hair">Hair Care</option>
+            <option value="body" selected>Body Care</option>
+            <option value="summer">Summer Collection</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description</label>
+          <input class="form-control" id="np-desc" type="text" placeholder="e.g. Lightweight rose-scented oil. Nourishes and softens skin. 100ml.">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Product Photo *</label>
+          <div class="img-upload-area" id="uploadArea">
+            <input type="file" accept="image/*" onchange="previewImg(event)">
+            <div class="upload-icon">&#128247;</div>
+            <div class="upload-txt">Tap to upload product photo</div>
+            <img class="img-preview" id="imgPreview" src="" alt="">
+          </div>
+        </div>
+      </div>
+      <button class="add-product-btn" onclick="addNewProduct()">
+        &#43; Add Product to Website
+      </button>
+      <div id="addResult" style="margin-top:14px;font-size:12px;color:var(--muted);display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PASSWORD ──
+var PASS = 'elissa2025';
+
+function doLogin() {
+  var val = document.getElementById('passInput').value;
+  if (val === PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('passInput').value = '';
+  }
+}
+
+function logout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('passInput').value = '';
+}
+
+// ── PRODUCT DATA ──
+var DEFAULT_PRODUCTS = {
+  intimate: [
+    {id:'sexy-aura', name:'Sexy Aura Spray', variant:'', price:5, inStock:true},
+    {id:'fresh-tint', name:'Fresh Tint', variant:'', price:5, inStock:true},
+    {id:'intimate-cleanser', name:'Intimate Cleanser', variant:'', price:5, inStock:true},
+  ],
+  hair: [
+    {id:'hairmist-musk', name:'Hair Mist', variant:'Musk Touch', price:9, inStock:true},
+    {id:'hairmist-roses', name:'Hair Mist', variant:'Roses Vanille', price:9, inStock:true},
+    {id:'hairmist-raspberry', name:'Hair Mist', variant:'Raspberry Ice Cream', price:9, inStock:true},
+    {id:'hairmist-cheesecake', name:'Hair Mist', variant:'Cheesecake', price:9, inStock:true},
+    {id:'hairmist-peach', name:'Hair Mist', variant:'Peach Papaya', price:9, inStock:true},
+    {id:'hair-growth', name:'Hair Growth Spray', variant:'', price:7, inStock:true},
+    {id:'hair-mask', name:'Hair Treatment Mask', variant:'', price:8, inStock:true},
+    {id:'keratin-shampoo', name:'Keratin Protein Shampoo', variant:'', price:9, inStock:true},
+    {id:'sunveil-hair', name:'Sunveil', variant:'Sun Lock for Hair', price:9, inStock:true},
+  ],
+  body: [
+    {id:'body-butter-gold', name:'Body Butter', variant:'Gold', price:10, inStock:true},
+    {id:'scrub-spring', name:'Body Scrub', variant:'Spring Touch', price:10, inStock:true},
+    {id:'scrub-coco', name:'Body Scrub', variant:'Coco + Vanilla', price:10, inStock:true},
+    {id:'scrub-exotic', name:'Body Scrub', variant:'Exotic', price:10, inStock:true},
+    {id:'bodyoil-coconut', name:'Body Oil', variant:'Coconut', price:7, inStock:true},
+    {id:'bodyoil-vanille', name:'Body Oil', variant:'Vanille', price:7, inStock:true},
+    {id:'bodymist-florence', name:'Body Mist', variant:'Florence', price:9, inStock:true},
+    {id:'bodymist-raspberry', name:'Body Mist', variant:'Raspberry Ice Cream', price:9, inStock:true},
+    {id:'bodymist-peach', name:'Body Mist', variant:'Peach Papaya', price:9, inStock:true},
+    {id:'bodymist-musk', name:'Body Mist', variant:'Natural Musk', price:9, inStock:true},
+    {id:'bodymist-rose', name:'Body Mist', variant:'Rose Vanilla', price:9, inStock:true},
+    {id:'bodymist-coco', name:'Body Mist', variant:'Coco Vanille', price:9, inStock:true},
+    {id:'body-splash', name:'Body Splash', variant:'Strawberry Crush', price:9, inStock:true},
+    {id:'musk-oil', name:'Natural Musk Oil', variant:'', price:4, inStock:true},
+    {id:'loban', name:'Loban', variant:'', price:6, inStock:true},
+    {id:'tanning-oil', name:'Tanning Oil', variant:'', price:7, inStock:true},
+    {id:'lip-tint', name:'Lip Tint', variant:'Juice Kiss', price:6, inStock:true},
+    {id:'lip-scrub', name:'Lip Scrub', variant:'Mango', price:3.5, inStock:true},
+  ],
+  summer: [
+    {id:'spf50', name:'SPF 50 Sunscreen', variant:'', price:7, inStock:true},
+    {id:'sunveil-summer', name:'Sunveil', variant:'Sun Lock for Hair', price:9, inStock:true},
+    {id:'tanning-oil-s', name:'Tanning Oil', variant:'', price:7, inStock:true},
+  ]
+};
+
+var products = {};
+
+function loadData() {
+  var saved = localStorage.getItem('ell_admin_products');
+  if (saved) {
+    try { products = JSON.parse(saved); }
+    catch(e) { products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
+  } else {
+    products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  }
+}
+
+function saveData() {
+  localStorage.setItem('ell_admin_products', JSON.stringify(products));
+}
+
+// ── RENDER ──
+var currentCat = 'intimate';
+
+function showCat(cat, btn) {
+  var cats = ['intimate','hair','body','summer'];
+  for (var i = 0; i < cats.length; i++) {
+    document.getElementById('cat-' + cats[i]).style.display = 'none';
+  }
+  document.getElementById('cat-' + cat).style.display = 'block';
+  var tabs = document.querySelectorAll('.cat-tab');
+  for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('on');
+  if (btn) btn.classList.add('on');
+  currentCat = cat;
+}
+
+function renderAll() {
+  var cats = ['intimate','hair','body','summer'];
+  for (var i = 0; i < cats.length; i++) {
+    renderCat(cats[i]);
+  }
+  updateStats();
+}
+
+function renderCat(cat) {
+  var list = products[cat] || [];
+  var el = document.getElementById('cat-' + cat);
+
+  var html = '<div class="sec-head"><div class="sec-title">' +
+    catLabel(cat) + '</div>' +
+    '<div class="sec-count">' + list.length + ' products</div></div>';
+
+  html += '<table class="p-table"><thead><tr>' +
+    '<th>Image</th><th>Product</th><th>Price ($)</th><th>Stock</th><th>Save</th>' +
+    '</tr></thead><tbody>';
+
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var stockLabel = p.inStock ? '<span class="toggle-label in">In Stock</span>' : '<span class="toggle-label out">Sold Out</span>';
+
+    html += '<tr id="row-' + p.id + '">' +
+      '<td><div style="width:48px;height:52px;background:#fff5f8;display:flex;align-items:center;justify-content:center;font-size:20px;">&#128146;</div></td>' +
+      '<td>' +
+        '<div class="prod-name">' + p.name + (p.inStock ? '' : ' <span class="sold-out-tag">Sold Out</span>') + '</div>' +
+        '<div class="prod-variant">' + (p.variant || '—') + '</div>' +
+      '</td>' +
+      '<td>' +
+        '<input class="price-input" type="number" step="0.5" min="0" value="' + p.price + '" id="price-' + p.id + '" onchange="updatePrice(\'' + cat + '\',' + i + ',this.value)">' +
+      '</td>' +
+      '<td>' +
+        '<div class="toggle-wrap">' +
+          '<label class="toggle">' +
+            '<input type="checkbox" ' + (p.inStock ? 'checked' : '') + ' onchange="updateStock(\'' + cat + '\',' + i + ',this.checked)">' +
+            '<span class="toggle-slider"></span>' +
+          '</label>' +
+          stockLabel +
+        '</div>' +
+      '</td>' +
+      '<td>' +
+        '<button class="row-save" id="save-' + p.id + '" onclick="saveRow(\'' + p.id + '\')">Save</button>' +
+      '</td>' +
+    '</tr>';
+  }
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function catLabel(cat) {
+  var labels = {intimate:'Intimate <em>Care</em>', hair:'Hair <em>Care</em>', body:'Body <em>Care</em>', summer:'Summer <em>Collection</em>'};
+  return labels[cat] || cat;
+}
+
+function updatePrice(cat, idx, val) {
+  products[cat][idx].price = parseFloat(val) || 0;
+}
+
+function updateStock(cat, idx, checked) {
+  products[cat][idx].inStock = checked;
+  renderCat(cat);
+  // Re-show correct cat
+  var cats = ['intimate','hair','body','summer'];
+  for (var i = 0; i < cats.length; i++) {
+    document.getElementById('cat-' + cats[i]).style.display = cats[i] === currentCat ? 'block' : 'none';
+  }
+  updateStats();
+}
+
+function saveRow(id) {
+  saveData();
+  var btn = document.getElementById('save-' + id);
+  if (btn) {
+    var orig = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    btn.classList.add('saved');
+    setTimeout(function() {
+      btn.textContent = orig;
+      btn.classList.remove('saved');
+    }, 2000);
+  }
+  showToast('Changes saved!');
+}
+
+function saveAll() {
+  // Collect all current input values first
+  var cats = ['intimate','hair','body','summer'];
+  for (var c = 0; c < cats.length; c++) {
+    var cat = cats[c];
+    var list = products[cat] || [];
+    for (var i = 0; i < list.length; i++) {
+      var input = document.getElementById('price-' + list[i].id);
+      if (input) list[i].price = parseFloat(input.value) || 0;
+    }
+  }
+  saveData();
+  showToast('All changes saved successfully!');
+
+  // Flash all save buttons
+  var btns = document.querySelectorAll('.row-save');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].textContent = 'Saved ✓';
+    btns[j].classList.add('saved');
+  }
+  setTimeout(function() {
+    var btns2 = document.querySelectorAll('.row-save');
+    for (var k = 0; k < btns2.length; k++) {
+      btns2[k].textContent = 'Save';
+      btns2[k].classList.remove('saved');
+    }
+  }, 2500);
+}
+
+function updateStats() {
+  var total = 0, inStock = 0, soldOut = 0;
+  var cats = ['intimate','hair','body','summer'];
+  for (var c = 0; c < cats.length; c++) {
+    var list = products[cats[c]] || [];
+    for (var i = 0; i < list.length; i++) {
+      total++;
+      if (list[i].inStock) inStock++; else soldOut++;
+    }
+  }
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statInStock').textContent = inStock;
+  document.getElementById('statSoldOut').textContent = soldOut;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+// ── GENERATE STOCK JSON ──
+// This creates a data file the main website can read
+function getStockData() {
+  return JSON.stringify(products);
+}
+
+function init() {
+  loadData();
+  renderAll();
+
+  // Check whish money
+  var whish = localStorage.getItem('ell_whish_link');
+  if (whish) {
+    document.getElementById('whishDot').classList.add('active');
+    document.getElementById('whishStatus').textContent = 'WhishMoney active: ' + whish;
+  }
+}
+
+
+// ── ADD NEW PRODUCT ──
+var newProductImg = '';
+
+function previewImg(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    newProductImg = ev.target.result;
+    var preview = document.getElementById('imgPreview');
+    preview.src = newProductImg;
+    preview.style.display = 'block';
+    document.querySelector('.upload-icon').style.display = 'none';
+    document.querySelector('.upload-txt').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addNewProduct() {
+  var name = document.getElementById('np-name').value.trim();
+  var variant = document.getElementById('np-variant').value.trim();
+  var price = parseFloat(document.getElementById('np-price').value) || 0;
+  var cat = document.getElementById('np-cat').value;
+  var desc = document.getElementById('np-desc').value.trim();
+
+  if (!name) { showToast('Please enter a product name!'); return; }
+  if (!price) { showToast('Please enter a price!'); return; }
+  if (!newProductImg) { showToast('Please upload a product photo!'); return; }
+
+  // Create new product object
+  var newProd = {
+    id: 'custom-' + Date.now(),
+    name: name,
+    variant: variant,
+    price: price,
+    inStock: true,
+    desc: desc,
+    img: newProductImg
+  };
+
+  // Add to products data
+  if (!products[cat]) products[cat] = [];
+  products[cat].push(newProd);
+  saveData();
+
+  // Re-render the category
+  renderCat(cat);
+  updateStats();
+
+  // Show success
+  var result = document.getElementById('addResult');
+  result.style.display = 'block';
+  result.innerHTML = '<span style="color:#2e7d32;font-weight:600;">&#10003; ' + name + ' added to ' + cat + ' category!</span><br><span style="color:#9b6070;">Note: Download the updated website file to publish the new product live.</span>';
+
+  showToast(name + ' added successfully!');
+
+  // Reset form
+  document.getElementById('np-name').value = '';
+  document.getElementById('np-variant').value = '';
+  document.getElementById('np-price').value = '';
+  document.getElementById('np-desc').value = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.querySelector('.upload-icon').style.display = 'block';
+  document.querySelector('.upload-txt').textContent = 'Tap to upload product photo';
+  newProductImg = '';
+
+  // Switch to that category tab
+  var tabs = document.querySelectorAll('.cat-tab');
+  var catNames = ['intimate','hair','body','summer'];
+  for (var i = 0; i < catNames.length; i++) {
+    if (catNames[i] === cat) {
+      showCat(cat, tabs[i]);
+      break;
+    }
+  }
+}
+
+// ── GENERATE WEBSITE DATA (for export) ──
+function exportStockData() {
+  var data = JSON.stringify(products, null, 2);
+  var blob = new Blob([data], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ell-organics-stock.json';
+  a.click();
+  showToast('Stock data exported!');
+}
+
+// Allow setting WhishMoney link
+window.setWhishLink = function(link) {
+  localStorage.setItem('ell_whish_link', link);
+  document.getElementById('whishDot').classList.add('active');
+  document.getElementById('whishStatus').textContent = 'WhishMoney active: ' + link;
+  showToast('WhishMoney link saved!');
+};
+</script>
+</body>
+</html>
